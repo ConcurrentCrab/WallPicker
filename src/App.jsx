@@ -1,5 +1,15 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { HexColorPicker, HexColorInput } from "react-colorful";
+
+function preloadImages(images) {
+  let prms = [];
+  for (const e of images) {
+    let i = new Image();
+    i.src = e;
+    prms.push(i.decode());
+  }
+  return Promise.all(prms);
+}
 
 function bypassCORS(url) {
   return `https://corsproxy.io/?${encodeURIComponent(url)}`;
@@ -40,8 +50,18 @@ function Grid({ imgs }) {
   );
 }
 
+const MemoisedGrid = memo(Grid);
+
+function ConditionalAppear({ visible, children }) {
+  return (
+    <div className={"transition-all duration-300" + (visible ? "" : " opacity-0")}>
+      {children}
+    </div>
+  )
+}
+
 export default function App() {
-  const fetch = 20, limit = 5;
+  const fetch = 20, limit = 5, preload = 10;
   const [color, setColor] = useState("#aabbcc");
   const [imgs, setImgs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -64,6 +84,7 @@ export default function App() {
   async function fetchImgs() {
     setLoading(true);
     let res = await fetchColorAPI(color.substring(1), fetch, limit);
+    await preloadImages(res.slice(0, preload).map(e => e.thumb));
     setImgs(res);
     setLoading(false);
   }
@@ -78,7 +99,9 @@ export default function App() {
         <button onClick={fetchImgs} className="bg-lime-400 outline-1 rounded text-grey w-32 m-3 px-4 py-2">{ "Search" + (loading ? "ing..." : "") }</button>
       </div>
     </div>
-    <Grid imgs={imgs} />
+    <ConditionalAppear visible={!loading}>
+      <MemoisedGrid imgs={imgs} />
+    </ConditionalAppear>
     </>
   );
 }
