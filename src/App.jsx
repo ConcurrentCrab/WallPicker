@@ -12,7 +12,7 @@ function preloadImages(images) {
 }
 
 function bypassCORS(url) {
-  return `https://corsproxy.io/?${encodeURIComponent(url)}`;
+  return `https://corsproxy.org/?${encodeURIComponent(url)}`;
 }
 
 async function fetchColorAPI(color, target, limit) {
